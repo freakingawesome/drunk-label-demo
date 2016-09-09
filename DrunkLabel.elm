@@ -19,7 +19,6 @@ main =
     , subscriptions = subscriptions
     }
 
-
 -- MODEL
 
 type alias Model =
@@ -30,6 +29,8 @@ type alias Model =
   , nextSeed : Random.Seed
   , nextWait : Time
   , dir : Direction
+  , showCursor : Bool
+  , cursorOn : Bool
   }
 
 kanye =
@@ -73,6 +74,8 @@ init seed =
   , nextSeed = seed
   , nextWait = 50 * millisecond
   , dir = Forward
+  , showCursor = True
+  , cursorOn = False
   } ! []
 
 
@@ -80,6 +83,7 @@ init seed =
 
 type Msg
   = SetValue String
+  | ToggleCursor
   | NextKey
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -87,6 +91,8 @@ update msg model =
   case msg of
     SetValue val ->
       { model | value = val, inProcess = "" } ! []
+    ToggleCursor ->
+      { model | cursorOn = model.showCursor && not model.cursorOn } ! []
     NextKey ->
       let
         (nextText, dir, nextSeed) = drunkTyper model
@@ -104,15 +110,29 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  if model.value == model.inProcess
-    then Sub.none
-    else Time.every model.nextWait (always NextKey)
+  let
+    typing =
+      if model.value == model.inProcess
+        then Sub.none
+        else Time.every model.nextWait (always NextKey)
+    cursorBlinking =
+      if model.showCursor
+        then Time.every (500 * millisecond) (always ToggleCursor)
+        else Sub.none
+  in
+    Sub.batch [ typing, cursorBlinking ]
 
 
 -- VIEW
 
 view : Model -> Html Msg
 view model =
-  pre [] [ text model.inProcess ]
+  let
+    cursor =
+      if model.showCursor && model.cursorOn
+        then "█"
+        else ""
+  in
+    pre [] [ text <| model.inProcess ++ cursor ]
 
 

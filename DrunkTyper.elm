@@ -26,6 +26,8 @@ type alias Model =
   , nextSeed : Random.Seed
   , nextWait : Time
   , dir : Direction
+  , showCursor : Bool
+  , cursorOn : Bool
   }
 
 
