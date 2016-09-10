@@ -47,6 +47,7 @@ type Msg
   | SetBrashness String -- parsed to Float
   | SetMinWait String -- parsed to Float
   | SetMaxWait String -- parsed to Float
+  | ToggleShowCursor
   | SetCursorBlinkInterval String -- parsed to Float
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -73,6 +74,8 @@ update msg model =
         setPreviewFloat str model.preview.brashness (flip DrunkLabel.SetSpeed model.preview.maxWait)
       SetMaxWait str ->
         setPreviewFloat str model.preview.brashness (DrunkLabel.SetSpeed model.preview.minWait)
+      ToggleShowCursor ->
+        update (PreviewMsg <| DrunkLabel.ShowCursor <| not model.preview.showCursor) model
       SetCursorBlinkInterval str ->
         setPreviewFloat str model.preview.cursorBlinkInterval DrunkLabel.SetCursorBlinkInterval
 
@@ -89,6 +92,7 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
   div [ style [("font-family", "sans-serif")]]
+    <|
     [ h3 [] [ text "Sobriety" ]
     , sliderView model.preview.sobriety SetSobriety 0.5 1
     , h3 [] [ text "Brashness" ]
@@ -97,9 +101,20 @@ view model =
     , sliderView model.preview.minWait SetMinWait 0 model.preview.maxWait
     , h3 [] [ text "Max Wait Time" ]
     , sliderView model.preview.maxWait SetMaxWait model.preview.minWait (1 * second)
-    , h3 [] [ text "Cursor Blink Interval" ]
-    , sliderView model.preview.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)
-    , pre [ style [("font-size", "24px")] ] [ App.map PreviewMsg <| DrunkLabel.view model.preview ]
+    , h3 []
+      [ input [ type' "checkbox", onClick ToggleShowCursor, checked model.preview.showCursor ] []
+      , text "Show Cursor?"
+      ]
+    ]
+    ++
+    (if model.preview.showCursor
+      then
+        [ h3 [] [ text "Cursor Blink Interval" ]
+        , sliderView model.preview.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)
+        ]
+      else [])
+    ++
+    [ pre [ style [("font-size", "24px")] ] [ App.map PreviewMsg <| DrunkLabel.view model.preview ]
     ]
 
 

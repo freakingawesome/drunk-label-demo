@@ -1,7 +1,14 @@
 module DrunkLabel exposing (
   Model,
   defaultModel,
-  Msg(SetValue, SetSobriety, SetBrashness, SetSpeed, SetCursorBlinkInterval),
+  Msg
+    ( SetValue
+    , SetSobriety
+    , SetBrashness
+    , SetSpeed
+    , ShowCursor
+    , SetCursorBlinkInterval
+    ),
   update,
   view,
   subscriptions)
@@ -69,6 +76,7 @@ type Msg
   | SetSobriety Float
   | SetBrashness Float
   | SetSpeed Time Time
+  | ShowCursor Bool
   | SetCursorBlinkInterval Time
   | ToggleCursor
   | NextKey
@@ -86,8 +94,10 @@ update msg model =
       { model | minWait = min, maxWait = max, dir = Backward True } ! []
     ToggleCursor ->
       { model | cursorOn = model.showCursor && not model.cursorOn } ! []
+    ShowCursor show ->
+      { model | showCursor = show } ! []
     SetCursorBlinkInterval val ->
-      { model | cursorBlinkInterval = val, dir = Backward True } ! []
+      { model | cursorBlinkInterval = val } ! []
     NextKey ->
       let
         (nextText, dir, nextSeed) = drunkTyper model
