@@ -27,15 +27,17 @@ main =
 
 type alias Model =
   { preview : DrunkLabel.Model
+  -- , previewText : String
   }
 
-previewText = "The quick brown fox jumps over the lazy dog" 
 
 init : Random.Seed -> (Model, Cmd Msg)
 init seed =
-  let preview = DrunkLabel.defaultModel
+  let
+    preview = DrunkLabel.defaultModel
+    defaultText = "The quick brown fox jumps over the lazy dog" 
   in
-    { preview = { preview | value = previewText}
+    { preview = { preview | value = defaultText }
     } ! []
 
 
@@ -114,7 +116,8 @@ view model =
         ]
       else [])
     ++
-    [ pre [ style [("font-size", "24px")] ] [ App.map PreviewMsg <| DrunkLabel.view model.preview ]
+    [ textarea [ rows 3, cols 80, onInput (PreviewMsg << DrunkLabel.SetValue) ] [ text model.preview.value ]
+    , pre [ style [("font-size", "24px")] ] [ App.map PreviewMsg <| DrunkLabel.view model.preview ]
     ]
 
 
