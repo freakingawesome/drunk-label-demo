@@ -1,4 +1,4 @@
-module DrunkSlider exposing (..) -- exposing (Msg(SetValue), update, view)
+module Demo exposing (..)
 
 import Html exposing (..)
 import Html.Attributes as Att exposing (..)
