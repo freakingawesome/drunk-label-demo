@@ -27,6 +27,7 @@ main =
 
 type alias Model =
   { preview : DrunkLabel.Model
+  , showAdvanced : Bool
   }
 
 
@@ -37,6 +38,7 @@ init seed =
     defaultText = "A quick brown fox jumps over the lazy dog"
   in
     { preview = { preview | value = defaultText }
+    , showAdvanced = False
     } ! []
 
 
@@ -50,6 +52,7 @@ type Msg
   | SetMaxWait String -- parsed to Float
   | ToggleShowCursor
   | SetCursorBlinkInterval String -- parsed to Float
+  | ToggleShowAdvanced
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -79,6 +82,8 @@ update msg model =
         update (PreviewMsg <| DrunkLabel.ShowCursor <| not model.preview.showCursor) model
       SetCursorBlinkInterval str ->
         setPreviewFloat str model.preview.cursorBlinkInterval DrunkLabel.SetCursorBlinkInterval
+      ToggleShowAdvanced ->
+        { model | showAdvanced = not model.showAdvanced } ! []
 
 
 -- SUBSCRIPTIONS
@@ -94,6 +99,23 @@ view model =
   Html.div [] [
     Html.div [Html.Attributes.attribute "class" "row"] [
       Html.div [Html.Attributes.attribute "class" "col-sm-4"] [
+        Html.h3 [] [Html.text "Input"]
+        , Html.textarea [Html.Attributes.attribute "class" "form-control", Html.Attributes.attribute "rows" "3", Html.Attributes.attribute "cols" "80", (onInput (PreviewMsg << DrunkLabel.SetValue))] [Html.text model.preview.value]
+        
+        , viewAdvanced model
+      ]
+
+      , Html.div [Html.Attributes.attribute "class" "col-sm-8"] [
+        Html.pre [Html.Attributes.attribute "style" "font-size: 24px"] [App.map PreviewMsg <| DrunkLabel.view model.preview]
+      ]
+    ]
+  ]
+
+viewAdvanced model =
+  if model.showAdvanced
+    then
+      Html.div [] [
+
         Html.h3 [] [Html.text "Sobriety"]
         , sliderView model.preview.sobriety SetSobriety 0.5 1
 
@@ -115,21 +137,16 @@ view model =
 
         , viewCursorBlinkInterval model
 
-        , Html.textarea [Html.Attributes.attribute "rows" "3", Html.Attributes.attribute "cols" "80", (onInput (PreviewMsg << DrunkLabel.SetValue))] [Html.text model.preview.value]
-
         , Html.div [] [Html.a [(onClick (PreviewMsg <| DrunkLabel.SetValue kanye))] [Html.text "kanye"]]
       ]
-
-      , Html.div [Html.Attributes.attribute "class" "col-sm-8"] [
-        Html.pre [Html.Attributes.attribute "style" "font-size: 24px"] [App.map PreviewMsg <| DrunkLabel.view model.preview]
+    else
+      Html.div [] [
+        Html.a [(onClick ToggleShowAdvanced)] [Html.text "Advanced..."]
       ]
-    ]
-  ]
-
 
 sliderView val msg min max =
   Html.div [] [
-    Html.input [Html.Attributes.attribute "type" "range", Html.Attributes.attribute "min" (toString min), Html.Attributes.attribute "max" (toString max), Html.Attributes.attribute "step" "0.01", Html.Attributes.attribute "value" (toString val), (on "input" (Json.map msg targetValue))] []
+    Html.input [Html.Attributes.attribute "type" "range", Html.Attributes.attribute "min" (toString min), Html.Attributes.attribute "max" (toString max), Html.Attributes.attribute "step" "0.01", Html.Attributes.attribute "value" (toString val), Html.Attributes.attribute "class" "form-control", (on "input" (Json.map msg targetValue))] []
   ]
 
 

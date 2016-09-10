@@ -27,6 +27,7 @@ main =
 
 type alias Model =
   { preview : DrunkLabel.Model
+  , showAdvanced : Bool
   }
 
 
@@ -37,6 +38,7 @@ init seed =
     defaultText = "A quick brown fox jumps over the lazy dog"
   in
     { preview = { preview | value = defaultText }
+    , showAdvanced = False
     } ! []
 
 
@@ -50,6 +52,7 @@ type Msg
   | SetMaxWait String -- parsed to Float
   | ToggleShowCursor
   | SetCursorBlinkInterval String -- parsed to Float
+  | ToggleShowAdvanced
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -79,6 +82,8 @@ update msg model =
         update (PreviewMsg <| DrunkLabel.ShowCursor <| not model.preview.showCursor) model
       SetCursorBlinkInterval str ->
         setPreviewFloat str model.preview.cursorBlinkInterval DrunkLabel.SetCursorBlinkInterval
+      ToggleShowAdvanced ->
+        { model | showAdvanced = not model.showAdvanced } ! []
 
 
 -- SUBSCRIPTIONS
@@ -94,6 +99,23 @@ view model =
   <div class="">
     <div class="row">
       <div class="col-sm-4">
+        <h3>Input</h3>
+        <textarea class="form-control" rows="3" cols="80" {onInput (PreviewMsg << DrunkLabel.SetValue)}>{=model.preview.value}</textarea>
+        
+        {viewAdvanced model}
+      </div>
+
+      <div class="col-sm-8">
+        <pre style="font-size: 24px">{App.map PreviewMsg <| DrunkLabel.view model.preview}</pre>
+      </div>
+    </div>
+  </div>
+
+viewAdvanced model =
+  if model.showAdvanced
+    then
+      <div>
+
         <h3>Sobriety</h3>
         {sliderView model.preview.sobriety SetSobriety 0.5 1}
 
@@ -115,17 +137,12 @@ view model =
 
         {viewCursorBlinkInterval model}
 
-        <textarea rows="3" cols="80" {onInput (PreviewMsg << DrunkLabel.SetValue)}>{=model.preview.value}</textarea>
-
         <div><a {onClick (PreviewMsg <| DrunkLabel.SetValue kanye)}>kanye</a></div>
       </div>
-
-      <div class="col-sm-8">
-        <pre style="font-size: 24px">{App.map PreviewMsg <| DrunkLabel.view model.preview}</pre>
+    else
+      <div>
+        <a {onClick ToggleShowAdvanced}>Advanced...</a>
       </div>
-    </div>
-  </div>
-
 
 sliderView val msg min max =
   <div>
@@ -135,6 +152,7 @@ sliderView val msg min max =
       max={toString max}
       step="0.01"
       value={toString val}
+      class="form-control"
       {on "input" (Json.map msg targetValue)} />
   </div>
 
