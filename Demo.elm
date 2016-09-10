@@ -35,7 +35,7 @@ init : Random.Seed -> (Model, Cmd Msg)
 init seed =
   let
     preview = DrunkLabel.defaultModel
-    defaultText = "The quick brown fox jumps over the lazy dog" 
+    defaultText = "The quick brown fox jumps over the lazy dog"
   in
     { preview = { preview | value = defaultText }
     } ! []
@@ -117,6 +117,7 @@ view model =
       else [])
     ++
     [ textarea [ rows 3, cols 80, onInput (PreviewMsg << DrunkLabel.SetValue) ] [ text model.preview.value ]
+    , div [] [ a [ onClick (PreviewMsg <| DrunkLabel.SetValue kanye) ] [ text "kanye" ] ]
     , pre [ style [("font-size", "24px")] ] [ App.map PreviewMsg <| DrunkLabel.view model.preview ]
     ]
 
@@ -133,3 +134,40 @@ sliderView val msg min max =
       ] []
     ]
 
+--
+
+kanye =
+  """McDonalds Man by Kanye West
+
+McDonalds Man
+The french fries had a plan
+The french fries had a plan
+The salad bar and the ketchup made a band
+Cus the french fries had a plan
+The french fries had a plan
+
+McDonalds Man
+McDonalds
+I know them french fries have a plan
+I know them french fries have a plan
+The cheeseburger and the shakes formed a band
+To overthrow the french fries plan
+I always knew them french fries was evil man
+Smelling all good and shit
+I don't trust no food that smells that good man
+I don't trust it
+I just can't
+
+McDonalds Man
+McDonalds Man
+McDonalds, damn
+Them french fries look good tho
+I knew the Diet Coke was jealous of the fries
+I knew the McNuggets was jealous of the fries
+Even the McRib was jealous of the fries
+I could see it through his artificial meat eyes
+And he only be there some of the time
+
+Everybody was jealous of them french fries
+Except for that one special guy
+That smooth apple pie"""
