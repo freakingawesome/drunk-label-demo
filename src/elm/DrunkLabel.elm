@@ -125,9 +125,12 @@ view model =
   let
     cursor =
       if model.showCursor && model.cursorOn
-        then "█"
+        then cursorCharacter
         else ""
   in
     text <| model.inProcess ++ cursor
 
+cursorCharacter : String
+cursorCharacter =
+  String.fromList [ Char.fromCode 9608 ]
 
