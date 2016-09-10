@@ -104,12 +104,12 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
   let
     typing =
-      if model.value == model.inProcess
-        then
-          case model.dir of
-            Backward True -> Time.every (50 * millisecond) (always NextKey)
-            _ -> Sub.none
-        else Time.every model.nextWait (always NextKey)
+      case model.dir of
+        Backward True -> Time.every (50 * millisecond) (always NextKey)
+        _ ->
+          if model.value == model.inProcess
+            then Sub.none
+            else Time.every model.nextWait (always NextKey)
     cursorBlinking =
       if model.showCursor
         then Time.every model.cursorBlinkInterval (always ToggleCursor)
