@@ -1,4 +1,4 @@
-module DrunkTyper exposing (Direction(..), drunkTyper)
+module DrunkTyper exposing (Direction(..), Model, drunkTyper)
 
 import Time exposing (Time, millisecond)
 import Char
@@ -17,7 +17,6 @@ type Direction
   = Forward
   | Backward Bool
 
--- This doesn't belong here... refactor!
 type alias Model =
   { value : String
   , inProcess : String

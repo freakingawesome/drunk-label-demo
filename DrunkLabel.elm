@@ -34,20 +34,7 @@ main =
 
 -- MODEL
 
-type alias Model =
-  { value : String
-  , inProcess : String
-  , sobriety : Float
-  , brashness : Float
-  , nextSeed : Random.Seed
-  , nextWait : Time
-  , minWait : Time
-  , maxWait : Time
-  , dir : Direction
-  , showCursor : Bool
-  , cursorOn : Bool
-  , cursorBlinkInterval : Time
-  }
+type alias Model = DrunkTyper.Model
 
 defaultModel =
   { value = ""
