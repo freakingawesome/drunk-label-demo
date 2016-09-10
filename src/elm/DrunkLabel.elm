@@ -105,7 +105,7 @@ subscriptions model =
   let
     typing =
       case model.dir of
-        Backward True -> Time.every (min model.minWait <| 50 * millisecond) (always NextKey)
+        Backward True -> Time.every (min model.maxWait <| 50 * millisecond) (always NextKey)
         _ ->
           if model.value == model.inProcess
             then Sub.none
