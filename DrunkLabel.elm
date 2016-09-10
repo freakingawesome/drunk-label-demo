@@ -69,11 +69,11 @@ update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     SetValue val ->
-      { model | value = val, inProcess = "" } ! []
+      { model | value = val, dir = Backward True } ! []
     SetSobriety val ->
-      { model | sobriety = val, inProcess = "" } ! []
+      { model | sobriety = val, dir = Backward True } ! []
     SetBrashness val ->
-      { model | brashness = val, inProcess = "" } ! []
+      { model | brashness = val, dir = Backward True } ! []
     ToggleCursor ->
       { model | cursorOn = model.showCursor && not model.cursorOn } ! []
     NextKey ->
@@ -96,7 +96,10 @@ subscriptions model =
   let
     typing =
       if model.value == model.inProcess
-        then Sub.none
+        then
+          case model.dir of
+            Backward True -> Time.every (50 * millisecond) (always NextKey)
+            _ -> Sub.none
         else Time.every model.nextWait (always NextKey)
     cursorBlinking =
       if model.showCursor

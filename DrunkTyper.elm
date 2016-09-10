@@ -15,7 +15,7 @@ type TypedKey
 
 type Direction
   = Forward
-  | Backward
+  | Backward Bool
 
 -- This doesn't belong here... refactor!
 type alias Model =
@@ -46,20 +46,26 @@ drunkTyper model =
       case model.dir of
         Forward ->
           appendNextLetter typedKeys model
-        Backward ->
+        Backward False ->
           Maybe.withDefault [] (List.Extra.init (String.toList model.inProcess))
             |> String.fromList
             |> flip (,) model.nextSeed
+        Backward True ->
+          (String.slice 0 -2 model.inProcess, model.nextSeed)
     (dir, nextSeed'') =
         case model.dir of
           Forward ->
             if numWrong == 0
               then (Forward, nextSeed')
-              else Random.step (Random.map (\f -> if f > model.brashness then Backward else Forward) (Random.float 0 1)) nextSeed'
-          Backward ->
+              else Random.step (Random.map (\f -> if f > model.brashness then Backward False else Forward) (Random.float 0 1)) nextSeed'
+          Backward False ->
             if numWrong == 0
               then (Forward, nextSeed')
-              else (Backward, nextSeed')
+              else (Backward False, nextSeed')
+          Backward True ->
+            if String.length model.inProcess == 0
+              then (Forward, nextSeed')
+              else (Backward True, nextSeed')
   in
     (drunked, dir, nextSeed'')
 
