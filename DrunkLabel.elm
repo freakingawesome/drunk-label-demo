@@ -1,7 +1,7 @@
 module DrunkLabel exposing (
   Model,
   defaultModel,
-  Msg(SetValue, SetSobriety, SetBrashness),
+  Msg(SetValue, SetSobriety, SetBrashness, SetSpeed),
   update,
   view,
   subscriptions)
@@ -34,6 +34,8 @@ type alias Model =
   , brashness : Float
   , nextSeed : Random.Seed
   , nextWait : Time
+  , minWait : Time
+  , maxWait : Time
   , dir : Direction
   , showCursor : Bool
   , cursorOn : Bool
@@ -46,6 +48,8 @@ defaultModel =
   , brashness = 0
   , nextSeed = Random.initialSeed 0
   , nextWait = 50 * millisecond
+  , minWait = 30 * millisecond
+  , maxWait = 200 * millisecond
   , dir = Forward
   , showCursor = True
   , cursorOn = False
@@ -62,6 +66,7 @@ type Msg
   = SetValue String
   | SetSobriety Float
   | SetBrashness Float
+  | SetSpeed Time Time
   | ToggleCursor
   | NextKey
 
@@ -74,12 +79,14 @@ update msg model =
       { model | sobriety = val, dir = Backward True } ! []
     SetBrashness val ->
       { model | brashness = val, dir = Backward True } ! []
+    SetSpeed min max ->
+      { model | minWait = min, maxWait = max, dir = Backward True } ! []
     ToggleCursor ->
       { model | cursorOn = model.showCursor && not model.cursorOn } ! []
     NextKey ->
       let
         (nextText, dir, nextSeed) = drunkTyper model
-        (nextWait, nextSeed') = Random.step (Random.float 30 200) nextSeed
+        (nextWait, nextSeed') = Random.step (Random.float model.minWait model.maxWait) nextSeed
       in
         { model
           | inProcess = nextText

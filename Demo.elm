@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.Attributes as Att exposing (..)
 import Html.Events exposing (..)
 import Html.App as App
-import Time exposing (Time, millisecond)
+import Time exposing (Time, millisecond, second)
 import Char
 import String
 import Random
@@ -45,6 +45,8 @@ type Msg
   = PreviewMsg DrunkLabel.Msg
   | SetSobriety String -- parsed to Float
   | SetBrashness String -- parsed to Float
+  | SetMinWait String -- parsed to Float
+  | SetMaxWait String -- parsed to Float
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -66,6 +68,10 @@ update msg model =
         setPreviewFloat str model.preview.sobriety DrunkLabel.SetSobriety
       SetBrashness str ->
         setPreviewFloat str model.preview.brashness DrunkLabel.SetBrashness
+      SetMinWait str ->
+        setPreviewFloat str model.preview.brashness (flip DrunkLabel.SetSpeed model.preview.maxWait)
+      SetMaxWait str ->
+        setPreviewFloat str model.preview.brashness (DrunkLabel.SetSpeed model.preview.minWait)
 
 
 -- SUBSCRIPTIONS
@@ -84,6 +90,10 @@ view model =
     , sliderView model.preview.sobriety SetSobriety 0.5 1
     , h3 [] [ text "Brashness" ]
     , sliderView model.preview.brashness SetBrashness 0 1
+    , h3 [] [ text "Min Wait Time" ]
+    , sliderView model.preview.minWait SetMinWait 0 model.preview.maxWait
+    , h3 [] [ text "Max Wait Time" ]
+    , sliderView model.preview.maxWait SetMaxWait model.preview.minWait (1 * second)
     , pre [ style [("font-size", "24px")] ] [ App.map PreviewMsg <| DrunkLabel.view model.preview ]
     ]
 

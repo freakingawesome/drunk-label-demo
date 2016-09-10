@@ -25,6 +25,8 @@ type alias Model =
   , brashness : Float
   , nextSeed : Random.Seed
   , nextWait : Time
+  , minWait : Time
+  , maxWait : Time
   , dir : Direction
   , showCursor : Bool
   , cursorOn : Bool
