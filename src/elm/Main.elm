@@ -1,4 +1,4 @@
-module Demo exposing (..)
+module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes as Att exposing (..)
