@@ -47,6 +47,7 @@ type Msg
   | SetBrashness String -- parsed to Float
   | SetMinWait String -- parsed to Float
   | SetMaxWait String -- parsed to Float
+  | SetCursorBlinkInterval String -- parsed to Float
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -72,6 +73,8 @@ update msg model =
         setPreviewFloat str model.preview.brashness (flip DrunkLabel.SetSpeed model.preview.maxWait)
       SetMaxWait str ->
         setPreviewFloat str model.preview.brashness (DrunkLabel.SetSpeed model.preview.minWait)
+      SetCursorBlinkInterval str ->
+        setPreviewFloat str model.preview.cursorBlinkInterval DrunkLabel.SetCursorBlinkInterval
 
 
 -- SUBSCRIPTIONS
@@ -94,6 +97,8 @@ view model =
     , sliderView model.preview.minWait SetMinWait 0 model.preview.maxWait
     , h3 [] [ text "Max Wait Time" ]
     , sliderView model.preview.maxWait SetMaxWait model.preview.minWait (1 * second)
+    , h3 [] [ text "Cursor Blink Interval" ]
+    , sliderView model.preview.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)
     , pre [ style [("font-size", "24px")] ] [ App.map PreviewMsg <| DrunkLabel.view model.preview ]
     ]
 

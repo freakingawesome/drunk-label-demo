@@ -30,6 +30,7 @@ type alias Model =
   , dir : Direction
   , showCursor : Bool
   , cursorOn : Bool
+  , cursorBlinkInterval : Time
   }
 
 

@@ -1,7 +1,7 @@
 module DrunkLabel exposing (
   Model,
   defaultModel,
-  Msg(SetValue, SetSobriety, SetBrashness, SetSpeed),
+  Msg(SetValue, SetSobriety, SetBrashness, SetSpeed, SetCursorBlinkInterval),
   update,
   view,
   subscriptions)
@@ -39,6 +39,7 @@ type alias Model =
   , dir : Direction
   , showCursor : Bool
   , cursorOn : Bool
+  , cursorBlinkInterval : Time
   }
 
 defaultModel =
@@ -53,6 +54,7 @@ defaultModel =
   , dir = Forward
   , showCursor = True
   , cursorOn = False
+  , cursorBlinkInterval = 500 * millisecond
   }
 
 init : Random.Seed -> (Model, Cmd Msg)
@@ -67,6 +69,7 @@ type Msg
   | SetSobriety Float
   | SetBrashness Float
   | SetSpeed Time Time
+  | SetCursorBlinkInterval Time
   | ToggleCursor
   | NextKey
 
@@ -83,6 +86,8 @@ update msg model =
       { model | minWait = min, maxWait = max, dir = Backward True } ! []
     ToggleCursor ->
       { model | cursorOn = model.showCursor && not model.cursorOn } ! []
+    SetCursorBlinkInterval val ->
+      { model | cursorBlinkInterval = val, dir = Backward True } ! []
     NextKey ->
       let
         (nextText, dir, nextSeed) = drunkTyper model
@@ -110,7 +115,7 @@ subscriptions model =
         else Time.every model.nextWait (always NextKey)
     cursorBlinking =
       if model.showCursor
-        then Time.every (500 * millisecond) (always ToggleCursor)
+        then Time.every model.cursorBlinkInterval (always ToggleCursor)
         else Sub.none
   in
     Sub.batch [ typing, cursorBlinking ]
