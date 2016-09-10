@@ -1,0 +1,199 @@
+module Demo exposing (..)
+
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Html.App as App
+import Time exposing (Time, millisecond, second)
+import Char
+import String
+import Random
+import List exposing (..)
+import List.Extra exposing (..)
+import DrunkLabel
+import Json.Decode as Json
+import Update.Extra.Infix exposing (..)
+
+
+main =
+  App.program
+    { init = init (Random.initialSeed 0)
+    , view = view
+    , update = update
+    , subscriptions = subscriptions
+    }
+
+-- MODEL
+
+type alias Model =
+  { preview : DrunkLabel.Model
+  }
+
+
+init : Random.Seed -> (Model, Cmd Msg)
+init seed =
+  let
+    preview = DrunkLabel.defaultModel
+    defaultText = "A quick brown fox jumps over the lazy dog"
+  in
+    { preview = { preview | value = defaultText }
+    } ! []
+
+
+-- UPDATE
+
+type Msg
+  = PreviewMsg DrunkLabel.Msg
+  | SetSobriety String -- parsed to Float
+  | SetBrashness String -- parsed to Float
+  | SetMinWait String -- parsed to Float
+  | SetMaxWait String -- parsed to Float
+  | ToggleShowCursor
+  | SetCursorBlinkInterval String -- parsed to Float
+
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg model =
+  let
+    setPreviewFloat str default submsg =
+      let
+        fval =
+          case String.toFloat str of
+            Ok f -> f
+            Err _ -> default
+      in
+        update (PreviewMsg (submsg fval)) model
+  in
+    case msg of
+      PreviewMsg submsg ->
+        let (preview, cmd') = DrunkLabel.update submsg model.preview
+        in { model | preview = preview } ! [ Cmd.map PreviewMsg cmd' ]
+      SetSobriety str ->
+        setPreviewFloat str model.preview.sobriety DrunkLabel.SetSobriety
+      SetBrashness str ->
+        setPreviewFloat str model.preview.brashness DrunkLabel.SetBrashness
+      SetMinWait str ->
+        setPreviewFloat str model.preview.brashness (flip DrunkLabel.SetSpeed model.preview.maxWait)
+      SetMaxWait str ->
+        setPreviewFloat str model.preview.brashness (DrunkLabel.SetSpeed model.preview.minWait)
+      ToggleShowCursor ->
+        update (PreviewMsg <| DrunkLabel.ShowCursor <| not model.preview.showCursor) model
+      SetCursorBlinkInterval str ->
+        setPreviewFloat str model.preview.cursorBlinkInterval DrunkLabel.SetCursorBlinkInterval
+
+
+-- SUBSCRIPTIONS
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Sub.map PreviewMsg <| DrunkLabel.subscriptions model.preview
+
+
+-- VIEW
+view : Model -> Html Msg
+view model =
+  <div class="">
+    <div class="row">
+      <div class="col-sm-4">
+        <h3>Sobriety</h3>
+        {sliderView model.preview.sobriety SetSobriety 0.5 1}
+
+        <h3>Brashness</h3>
+        {sliderView model.preview.brashness SetBrashness 0 1}
+
+        <h3>Min Wait Time</h3>
+        {sliderView model.preview.minWait SetMinWait 0 model.preview.maxWait}
+
+        <h3>Max Wait Time</h3>
+        {sliderView model.preview.maxWait SetMaxWait model.preview.minWait (1 * second)}
+
+        <h3>
+          <label>
+            <input type="checkbox" {onClick ToggleShowCursor} {checked model.preview.showCursor} />
+            Show Cursor?
+          </label>
+        </h3>
+
+        {viewCursorBlinkInterval model}
+
+        <textarea rows="3" cols="80" {onInput (PreviewMsg << DrunkLabel.SetValue)}>{=model.preview.value}</textarea>
+
+        <div><a {onClick (PreviewMsg <| DrunkLabel.SetValue kanye)}>kanye</a></div>
+      </div>
+
+      <div class="col-sm-8">
+        <pre style="font-size: 24px">{App.map PreviewMsg <| DrunkLabel.view model.preview}</pre>
+      </div>
+    </div>
+  </div>
+
+
+sliderView val msg min max =
+  <div>
+    <input
+      type="range"
+      min={toString min}
+      max={toString max}
+      step="0.01"
+      value={toString val}
+      {on "input" (Json.map msg targetValue)} />
+  </div>
+
+
+viewCursorBlinkInterval model =
+  if model.preview.showCursor
+    then
+      <div>
+        <h3>Cursor Blink Interval</h3>
+        {sliderView model.preview.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)}
+      </div>
+    else
+      <div></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Kanye's diggin' it
+kanye =
+  """McDonalds Man by Kanye West
+
+McDonalds Man
+The french fries had a plan
+The french fries had a plan
+The salad bar and the ketchup made a band
+Cus the french fries had a plan
+The french fries had a plan
+
+McDonalds Man
+McDonalds
+I know them french fries have a plan
+I know them french fries have a plan
+The cheeseburger and the shakes formed a band
+To overthrow the french fries plan
+I always knew them french fries was evil man
+Smelling all good and shit
+I don't trust no food that smells that good man
+I don't trust it
+I just can't
+
+McDonalds Man
+McDonalds Man
+McDonalds, damn
+Them french fries look good tho
+I knew the Diet Coke was jealous of the fries
+I knew the McNuggets was jealous of the fries
+Even the McRib was jealous of the fries
+I could see it through his artificial meat eyes
+And he only be there some of the time
+
+Everybody was jealous of them french fries
+Except for that one special guy
+That smooth apple pie"""
