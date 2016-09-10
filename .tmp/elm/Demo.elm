@@ -46,12 +46,12 @@ init seed =
 
 type Msg
   = PreviewMsg DrunkLabel.Msg
-  | SetSobriety String -- parsed to Float
-  | SetBrashness String -- parsed to Float
-  | SetMinWait String -- parsed to Float
-  | SetMaxWait String -- parsed to Float
+  | SetSobriety String
+  | SetBrashness String
+  | SetMinWait String
+  | SetMaxWait String
   | ToggleShowCursor
-  | SetCursorBlinkInterval String -- parsed to Float
+  | SetCursorBlinkInterval String
   | ToggleShowAdvanced
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -75,9 +75,9 @@ update msg model =
       SetBrashness str ->
         setPreviewFloat str model.preview.brashness DrunkLabel.SetBrashness
       SetMinWait str ->
-        setPreviewFloat str model.preview.brashness (flip DrunkLabel.SetSpeed model.preview.maxWait)
+        setPreviewFloat str model.preview.minWait (flip DrunkLabel.SetSpeed model.preview.maxWait)
       SetMaxWait str ->
-        setPreviewFloat str model.preview.brashness (DrunkLabel.SetSpeed model.preview.minWait)
+        setPreviewFloat str model.preview.maxWait (DrunkLabel.SetSpeed model.preview.minWait)
       ToggleShowCursor ->
         update (PreviewMsg <| DrunkLabel.ShowCursor <| not model.preview.showCursor) model
       SetCursorBlinkInterval str ->
@@ -96,18 +96,16 @@ subscriptions model =
 -- VIEW
 view : Model -> Html Msg
 view model =
-  Html.div [] [
-    Html.div [Html.Attributes.attribute "class" "row"] [
-      Html.div [Html.Attributes.attribute "class" "col-sm-4"] [
-        Html.h3 [] [Html.text "Input"]
-        , Html.textarea [Html.Attributes.attribute "class" "form-control", Html.Attributes.attribute "rows" "3", Html.Attributes.attribute "cols" "80", (onInput (PreviewMsg << DrunkLabel.SetValue))] [Html.text model.preview.value]
-        
-        , viewAdvanced model
-      ]
+  Html.div [Html.Attributes.attribute "class" "row"] [
+    Html.div [Html.Attributes.attribute "class" "col-sm-4"] [
+      Html.h3 [] [Html.text "Input"]
+      , Html.textarea [Html.Attributes.attribute "class" "form-control", Html.Attributes.attribute "rows" "3", Html.Attributes.attribute "cols" "80", (onInput (PreviewMsg << DrunkLabel.SetValue))] [Html.text model.preview.value]
+      
+      , viewAdvanced model
+    ]
 
-      , Html.div [Html.Attributes.attribute "class" "col-sm-8"] [
-        Html.pre [Html.Attributes.attribute "style" "font-size: 24px"] [App.map PreviewMsg <| DrunkLabel.view model.preview]
-      ]
+    , Html.div [Html.Attributes.attribute "class" "col-sm-8"] [
+      Html.pre [Html.Attributes.attribute "style" "font-size: 24px"] [App.map PreviewMsg <| DrunkLabel.view model.preview]
     ]
   ]
 
@@ -115,7 +113,6 @@ viewAdvanced model =
   if model.showAdvanced
     then
       Html.div [] [
-
         Html.h3 [] [Html.text "Sobriety"]
         , sliderView model.preview.sobriety SetSobriety 0.5 1
 
@@ -172,7 +169,14 @@ viewCursorBlinkInterval model =
 
 
 
--- Kanye's diggin' it
+
+
+
+
+
+
+
+-- Kanye's lovin' it
 kanye =
   """McDonalds Man by Kanye West
 
