@@ -4,3 +4,19 @@ $icon-font-path: '~bootstrap-sass/assets/fonts/bootstrap/';
 @import '_inputrange.scss';
 
 // can add Boostrap overrides, additional Sass/CSS below...
+a {
+  cursor: pointer;
+}
+
+.jumbotron {
+  background-color: #60B5CC;
+  color: #FFFFFF;
+
+  small {
+    color: #FFFFFF;
+  }
+
+  .btn-primary {
+    background-color: #34495E;
+  }
+}

@@ -38,7 +38,7 @@ init seed =
     defaultText = "A quick brown fox jumps over the lazy dog"
   in
     { preview = { preview | value = defaultText }
-    , showAdvanced = False
+    , showAdvanced = True
     } ! []
 
 
@@ -96,26 +96,53 @@ subscriptions model =
 -- VIEW
 view : Model -> Html Msg
 view model =
-  <div class="container">
-    <div class="row">
-      <div class="col-sm-4">
-        <form>
-          <div class="form-group">
-            <label for="input">Input</label>
-            <textarea class="form-control" rows="3" cols="80" id="input" {onInput (PreviewMsg << DrunkLabel.SetValue)}>{=model.preview.value}</textarea>
-          </div>
-          
-          {viewAdvanced model}
-        </form>
+  <div>
+    <div class="jumbotron">
+      <div class="container">
+        <h1>
+          DrunkLabel
+          <small> - Mistyping as a Service</small>
+        </h1>
+        <p>
+          DrunkLabel is an Elm component which types things out to the screen ... poorly. The sobriety of
+          the typist is entirely at your control.
+        </p>
+        <p>
+          <a class="btn btn-primary btn-lg" href="http://package.elm-lang.org/packages/freakingawesome/drunk-label/latest" role="button">Get DrunkLabel</a>
+          <a class="btn btn-default btn-lg pull-right" href="https://github.com/freakingawesome/drunk-label" role="button">Browse Source</a>
+        </p>
       </div>
+    </div>
+    <div class="container">
+      <h3>Playground</h3>
+      <p>
+        DrunkLabel will attempt to type your input in the output
+        field. The higher the blood alcohol content, the longer it will take, so be patient and
+        enjoy the struggle!
+      </p>
+      <div class="row">
+        <div class="col-sm-4">
+          <form>
+            <div class="form-group">
+              <label for="input">Input</label>
+              <textarea class="form-control" rows="3" cols="80" id="input" {onInput (PreviewMsg << DrunkLabel.SetValue)}>{=model.preview.value}</textarea>
+            </div>
+            
+            {viewAdvanced model}
+          </form>
+        </div>
 
-      <div class="col-sm-8">
-        <form>
-          <div class="form-group">
-            <label for="output">Output</label>
-            <pre style="font-size: 20px">{App.map PreviewMsg <| DrunkLabel.view model.preview}</pre>
-          </div>
-        </form>
+        <div class="col-sm-8">
+          <form>
+            <div class="form-group">
+              <label for="output">Output</label>
+              <pre style="font-size: 20px">{App.map PreviewMsg <| DrunkLabel.view model.preview}</pre>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="pull-right">
+        <a class="form-control-static pull-right" {onClick (PreviewMsg <| DrunkLabel.SetValue kanye)}>kanye</a>
       </div>
     </div>
   </div>
@@ -154,10 +181,6 @@ viewAdvanced model =
         </div>
 
         {viewCursorBlinkInterval model}
-
-        <div class="form-group">
-          <a class="form-control-static pull-right" {onClick (PreviewMsg <| DrunkLabel.SetValue kanye)}>kanye</a>
-        </div>
       </div>
     else
       <div>
