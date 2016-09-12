@@ -136,7 +136,7 @@ view model =
           <form>
             <div class="form-group">
               <label for="output">Output</label>
-              <pre style="font-size: 20px">{App.map PreviewMsg <| DrunkLabel.view model.preview}</pre>
+              <pre style="font-size: 20px; min-height: 500px;">{App.map PreviewMsg <| DrunkLabel.view model.preview}</pre>
             </div>
           </form>
         </div>
