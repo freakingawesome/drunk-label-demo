@@ -27,6 +27,7 @@ main =
 
 type alias Model =
   { preview : DrunkLabel.Model
+  , tagline : DrunkLabel.Model
   , showAdvanced : Bool
   }
 
@@ -35,17 +36,19 @@ init : Random.Seed -> (Model, Cmd Msg)
 init seed =
   let
     preview = DrunkLabel.defaultModel
-    defaultText = "A quick brown fox jumps over the lazy dog"
+    tagline = DrunkLabel.defaultModel
   in
-    { preview = { preview | value = defaultText }
+    { preview = { preview | value = "A quick brown fox jumps over the lazy dog", nextSeed = seed }
+    , tagline = { tagline | value = "Mistyping as a Service", sobriety = 0.85, brashness = 0.5, nextSeed = seed }
     , showAdvanced = True
     } ! []
-
 
 -- UPDATE
 
 type Msg
   = PreviewMsg DrunkLabel.Msg
+  | TaglineMsg DrunkLabel.Msg
+  | ResetTagline
   | SetSobriety String
   | SetBrashness String
   | SetMinWait String
@@ -70,6 +73,11 @@ update msg model =
       PreviewMsg submsg ->
         let (preview, cmd') = DrunkLabel.update submsg model.preview
         in { model | preview = preview } ! [ Cmd.map PreviewMsg cmd' ]
+      TaglineMsg submsg ->
+        let (tagline, cmd') = DrunkLabel.update submsg model.tagline
+        in { model | tagline = tagline } ! [ Cmd.map TaglineMsg cmd' ]
+      ResetTagline ->
+        update (TaglineMsg <| DrunkLabel.SetValue model.tagline.value) model
       SetSobriety str ->
         setPreviewFloat str model.preview.sobriety DrunkLabel.SetSobriety
       SetBrashness str ->
@@ -90,7 +98,11 @@ update msg model =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.map PreviewMsg <| DrunkLabel.subscriptions model.preview
+  Sub.batch
+    [ Sub.map PreviewMsg <| DrunkLabel.subscriptions model.preview
+    , Sub.map TaglineMsg <| DrunkLabel.subscriptions model.tagline
+    , Time.every (10 * second) (always ResetTagline)
+    ]
 
 
 -- VIEW
@@ -101,7 +113,7 @@ view model =
       <div class="container">
         <h1>
           DrunkLabel
-          <small> - Mistyping as a Service</small>
+          <small> - {App.map PreviewMsg <| DrunkLabel.view model.tagline}</small>
         </h1>
         <p>
           DrunkLabel is an Elm component which types things out to the screen ... poorly. The sobriety of
