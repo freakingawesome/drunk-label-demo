@@ -4,11 +4,14 @@ import Html.App as App
 import Random
 import Demo
 
-main : Program Never
+main : Program Flags
 main =
-  App.program
-    { init = Demo.init (Random.initialSeed 0)
+  App.programWithFlags
+    { init = \flags -> Demo.init (Random.initialSeed flags.initialSeed)
     , view = Demo.view
     , update = Demo.update
     , subscriptions = Demo.subscriptions
     }
+
+type alias Flags =
+  { initialSeed: Int }
