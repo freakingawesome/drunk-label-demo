@@ -17,7 +17,7 @@ import Update.Extra.Infix exposing (..)
 
 main =
   App.program
-    { init = init (Random.initialSeed 0)
+    { init = init 0
     , view = view
     , update = update
     , subscriptions = subscriptions
@@ -32,16 +32,16 @@ type alias Model =
   }
 
 
-init : Random.Seed -> (Model, Cmd Msg)
+init : Int -> (Model, Cmd Msg)
 init seed =
   let
-    preview = DrunkLabel.defaultModel
-    tagline = DrunkLabel.defaultModel
+    (previewModel, previewCmd) = DrunkLabel.init (Random.initialSeed <| seed)
+    (taglineModel, taglineCmd) = DrunkLabel.init (Random.initialSeed <| seed + 1) -- +1 to avoid the same seed trail
   in
-    { preview = { preview | value = "A quick brown fox jumps over the lazy dog", nextSeed = seed }
-    , tagline = { tagline | value = "Mistyping as a Service", sobriety = 0.85, brashness = 0.5, nextSeed = seed }
+    { preview = { previewModel | value = "A quick brown fox jumps over the lazy dog" }
+    , tagline = { taglineModel | value = "Mistyping as a Service", sobriety = 0.85, brashness = 0.5 }
     , showAdvanced = True
-    } ! []
+    } ! [ Cmd.map PreviewMsg previewCmd, Cmd.map TaglineMsg taglineCmd ]
 
 -- UPDATE
 
@@ -83,9 +83,9 @@ update msg model =
       SetBrashness str ->
         setPreviewFloat str model.preview.brashness DrunkLabel.SetBrashness
       SetMinWait str ->
-        setPreviewFloat str model.preview.minWait (flip DrunkLabel.SetSpeed model.preview.maxWait)
+        setPreviewFloat str model.preview.minWait DrunkLabel.SetMinWait
       SetMaxWait str ->
-        setPreviewFloat str model.preview.maxWait (DrunkLabel.SetSpeed model.preview.minWait)
+        setPreviewFloat str model.preview.maxWait DrunkLabel.SetMaxWait
       ToggleShowCursor ->
         update (PreviewMsg <| DrunkLabel.ShowCursor <| not model.preview.showCursor) model
       SetCursorBlinkInterval str ->
