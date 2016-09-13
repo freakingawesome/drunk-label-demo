@@ -13,6 +13,7 @@ import List.Extra exposing (..)
 import DrunkLabel
 import Json.Decode as Json
 import Update.Extra.Infix exposing (..)
+import Data.Decimal as Decimal
 
 
 main =
@@ -164,22 +165,22 @@ viewAdvanced model =
     then
       <div>
         <div class="form-group">
-          <label for="sobriety">Sobriety</label>
+          <label for="sobriety">Sobriety {showPct model.preview.sobriety}</label>
           {sliderView "sobriety" model.preview.sobriety SetSobriety 0.5 1}
         </div>
 
         <div class="form-group">
-          <label for="brashness">Brashness</label>
+          <label for="brashness">Brashness {showPct model.preview.brashness}</label>
           {sliderView "brashness" model.preview.brashness SetBrashness 0 1}
         </div>
 
         <div class="form-group">
-          <label for="minWaitTime">Min Wait Time</label>
+          <label for="minWaitTime">Min Wait Time {showMs model.preview.minWait}</label>
           {sliderView "minWaitTime" model.preview.minWait SetMinWait 0 model.preview.maxWait}
         </div>
 
         <div class="form-group">
-          <label for="maxWaitTime">Max Wait Time</label>
+          <label for="maxWaitTime">Max Wait Time {showMs model.preview.maxWait}</label>
           {sliderView "maxWaitTime" model.preview.maxWait SetMaxWait model.preview.minWait (1 * second)}
         </div>
 
@@ -199,6 +200,16 @@ viewAdvanced model =
         <a {onClick ToggleShowAdvanced}>Advanced...</a>
       </div>
 
+showMs val =
+  <span class="value-preview">({=(toString val)}ms)</span>
+
+showPct val =
+  case Decimal.fromFloat (val * 100) of
+    Just v ->
+      <span class="value-preview">({=(Decimal.toString <| Decimal.round -2 v)}%)</span>
+    Nothing ->
+      <span></span>
+
 sliderView id val msg min max =
   <div>
     <input
@@ -216,7 +227,7 @@ viewCursorBlinkInterval model =
   if model.preview.showCursor
     then
       <div class="form-group">
-        <label for="cursorBlinkInterval">Cursor Blink Interval</label>
+        <label for="cursorBlinkInterval">Cursor Blink Interval {showMs model.preview.cursorBlinkInterval}</label>
         {sliderView "cursorBlinkInterval" model.preview.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)}
       </div>
     else
