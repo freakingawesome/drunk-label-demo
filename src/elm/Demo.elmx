@@ -113,8 +113,8 @@ view model =
       <div class="container">
         <h1>
           DrunkLabel
-          <small> - {App.map PreviewMsg <| DrunkLabel.view model.tagline}</small>
         </h1>
+        <h2>{App.map PreviewMsg <| DrunkLabel.view model.tagline}</h2>
         <p>
           DrunkLabel is an Elm component which types things out to the screen ... poorly. The sobriety of
           the typist is entirely at your control.
