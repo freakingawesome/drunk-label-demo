@@ -5,17 +5,14 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Html.App as App
 import Time exposing (Time, millisecond, second)
-import Char
 import String
-import Random
-import List exposing (..)
-import List.Extra exposing (..)
 import DrunkLabel
 import Json.Decode as Json
-import Update.Extra.Infix exposing (..)
 import Data.Decimal as Decimal
+import Update.Extra.Infix exposing (..)
 
 
+main : Program Never
 main =
   App.program
     { init = init 0
@@ -29,18 +26,46 @@ main =
 type alias Model =
   { preview : DrunkLabel.Model
   , tagline : DrunkLabel.Model
+  , value : String
+  , sobriety : Float
+  , brashness : Float
+  , minWait : Time
+  , maxWait : Time
+  , showCursor : Bool
+  , cursorBlinkInterval : Time
   , showAdvanced : Bool
   }
 
+defaultTagline : String
+defaultTagline = "A quick brown fox jumps over the lazy dog"
 
 init : Int -> (Model, Cmd Msg)
 init seed =
   let
-    (previewModel, previewCmd) = DrunkLabel.init (Random.initialSeed <| seed)
-    (taglineModel, taglineCmd) = DrunkLabel.init (Random.initialSeed <| seed + 1) -- +1 to avoid the same seed trail
+    flags = DrunkLabel.defaultFlags
+    previewSettings = 
+      { flags
+        | initialSeed = seed
+        , value = defaultTagline
+      }
+    (preview, previewCmd) = DrunkLabel.init previewSettings
+    (tagline, taglineCmd) = DrunkLabel.init
+      { flags
+        | initialSeed = seed + 1 -- +1 to avoid the same seed trail
+        , value = "Mistyping as a Service"
+        , sobriety = 0.85
+        , brashness = 0.5
+      }
   in
-    { preview = { previewModel | value = "A quick brown fox jumps over the lazy dog" }
-    , tagline = { taglineModel | value = "Mistyping as a Service", sobriety = 0.85, brashness = 0.5 }
+    { preview = preview
+    , tagline = tagline
+    , value = previewSettings.value
+    , sobriety = previewSettings.sobriety
+    , brashness = previewSettings.brashness
+    , minWait = previewSettings.minWait
+    , maxWait = previewSettings.maxWait
+    , showCursor = previewSettings.showCursor
+    , cursorBlinkInterval = previewSettings.cursorBlinkInterval
     , showAdvanced = True
     } ! [ Cmd.map PreviewMsg previewCmd, Cmd.map TaglineMsg taglineCmd ]
 
@@ -60,39 +85,35 @@ type Msg
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
-  let
-    setPreviewFloat str default submsg =
-      let
-        fval =
-          case String.toFloat str of
-            Ok f -> f
-            Err _ -> default
-      in
-        update (PreviewMsg (submsg fval)) model
-  in
-    case msg of
-      PreviewMsg submsg ->
-        let (preview, cmd') = DrunkLabel.update submsg model.preview
-        in { model | preview = preview } ! [ Cmd.map PreviewMsg cmd' ]
-      TaglineMsg submsg ->
-        let (tagline, cmd') = DrunkLabel.update submsg model.tagline
-        in { model | tagline = tagline } ! [ Cmd.map TaglineMsg cmd' ]
-      ResetTagline ->
-        update (TaglineMsg <| DrunkLabel.SetValue model.tagline.value) model
-      SetSobriety str ->
-        setPreviewFloat str model.preview.sobriety DrunkLabel.SetSobriety
-      SetBrashness str ->
-        setPreviewFloat str model.preview.brashness DrunkLabel.SetBrashness
-      SetMinWait str ->
-        setPreviewFloat str model.preview.minWait DrunkLabel.SetMinWait
-      SetMaxWait str ->
-        setPreviewFloat str model.preview.maxWait DrunkLabel.SetMaxWait
-      ToggleShowCursor ->
-        update (PreviewMsg <| DrunkLabel.ShowCursor <| not model.preview.showCursor) model
-      SetCursorBlinkInterval str ->
-        setPreviewFloat str model.preview.cursorBlinkInterval DrunkLabel.SetCursorBlinkInterval
-      ToggleShowAdvanced ->
-        { model | showAdvanced = not model.showAdvanced } ! []
+  case msg of
+    PreviewMsg submsg ->
+      let (preview, cmd') = DrunkLabel.update submsg model.preview
+      in { model | preview = preview } ! [ Cmd.map PreviewMsg cmd' ]
+    TaglineMsg submsg ->
+      let (tagline, cmd') = DrunkLabel.update submsg model.tagline
+      in { model | tagline = tagline } ! [ Cmd.map TaglineMsg cmd' ]
+    ResetTagline ->
+      update (TaglineMsg <| DrunkLabel.SetValue defaultTagline) model
+    SetSobriety str ->
+      { model | sobriety = Result.withDefault model.sobriety <| String.toFloat str } ! []
+        :> \m -> update (PreviewMsg (DrunkLabel.SetSobriety m.sobriety)) m
+    SetBrashness str ->
+      { model | brashness = Result.withDefault model.brashness <| String.toFloat str } ! []
+        :> \m -> update (PreviewMsg (DrunkLabel.SetBrashness m.brashness)) m
+    SetMinWait str ->
+      { model | minWait = Result.withDefault model.minWait <| String.toFloat str } ! []
+        :> \m -> update (PreviewMsg (DrunkLabel.SetMinWait m.minWait)) m
+    SetMaxWait str ->
+      { model | maxWait = Result.withDefault model.maxWait <| String.toFloat str } ! []
+        :> \m -> update (PreviewMsg (DrunkLabel.SetMaxWait m.maxWait)) m
+    ToggleShowCursor ->
+      let showCursor = not model.showCursor
+      in update (PreviewMsg <| DrunkLabel.ShowCursor <| showCursor) { model | showCursor = showCursor }
+    SetCursorBlinkInterval str ->
+      { model | cursorBlinkInterval = Result.withDefault model.cursorBlinkInterval <| String.toFloat str } ! []
+        :> \m -> update (PreviewMsg (DrunkLabel.SetCursorBlinkInterval m.cursorBlinkInterval)) m
+    ToggleShowAdvanced ->
+      { model | showAdvanced = not model.showAdvanced } ! []
 
 
 -- SUBSCRIPTIONS
@@ -138,7 +159,7 @@ view model =
           <form>
             <div class="form-group">
               <label for="input">Input</label>
-              <textarea class="form-control" rows="3" cols="80" id="input" {onInput (PreviewMsg << DrunkLabel.SetValue)}>{=model.preview.value}</textarea>
+              <textarea class="form-control" rows="3" cols="80" id="input" {onInput (PreviewMsg << DrunkLabel.SetValue)}>{=model.value}</textarea>
             </div>
             
             {viewAdvanced model}
@@ -160,34 +181,35 @@ view model =
     </div>
   </div>
 
+viewAdvanced : Model -> Html Msg
 viewAdvanced model =
   if model.showAdvanced
     then
       <div>
         <div class="form-group">
-          <label for="sobriety">Sobriety {showPct model.preview.sobriety}</label>
-          {sliderView "sobriety" model.preview.sobriety SetSobriety 0.5 1}
+          <label for="sobriety">Sobriety {showPct model.sobriety}</label>
+          {sliderView "sobriety" model.sobriety SetSobriety 0.5 1}
         </div>
 
         <div class="form-group">
-          <label for="brashness">Brashness {showPct model.preview.brashness}</label>
-          {sliderView "brashness" model.preview.brashness SetBrashness 0 1}
+          <label for="brashness">Brashness {showPct model.brashness}</label>
+          {sliderView "brashness" model.brashness SetBrashness 0 1}
         </div>
 
         <div class="form-group">
-          <label for="minWaitTime">Min Wait Time {showMs model.preview.minWait}</label>
-          {sliderView "minWaitTime" model.preview.minWait SetMinWait 0 model.preview.maxWait}
+          <label for="minWaitTime">Min Wait Time {showMs model.minWait}</label>
+          {sliderView "minWaitTime" model.minWait SetMinWait 0 model.maxWait}
         </div>
 
         <div class="form-group">
-          <label for="maxWaitTime">Max Wait Time {showMs model.preview.maxWait}</label>
-          {sliderView "maxWaitTime" model.preview.maxWait SetMaxWait model.preview.minWait (1 * second)}
+          <label for="maxWaitTime">Max Wait Time {showMs model.maxWait}</label>
+          {sliderView "maxWaitTime" model.maxWait SetMaxWait model.minWait (1 * second)}
         </div>
 
         <div class="form-group">
           <div class="checkbox">
             <label>
-              <input type="checkbox" {onClick ToggleShowCursor} {checked model.preview.showCursor} />
+              <input type="checkbox" {onClick ToggleShowCursor} {checked model.showCursor} />
               <strong>Show Cursor?</strong>
             </label>
           </div>
@@ -200,9 +222,11 @@ viewAdvanced model =
         <a {onClick ToggleShowAdvanced}>Advanced...</a>
       </div>
 
+showMs : Float -> Html Msg
 showMs val =
   <span class="value-preview">({=(toString val)}ms)</span>
 
+showPct : Float -> Html Msg
 showPct val =
   case Decimal.fromFloat (val * 100) of
     Just v ->
@@ -210,6 +234,7 @@ showPct val =
     Nothing ->
       <span></span>
 
+sliderView : String -> a -> (String -> Msg) -> Float -> Float -> Html Msg
 sliderView id val msg min max =
   <div>
     <input
@@ -222,13 +247,13 @@ sliderView id val msg min max =
       {on "input" (Json.map msg targetValue)} />
   </div>
 
-
+viewCursorBlinkInterval : Model -> Html Msg
 viewCursorBlinkInterval model =
-  if model.preview.showCursor
+  if model.showCursor
     then
       <div class="form-group">
-        <label for="cursorBlinkInterval">Cursor Blink Interval {showMs model.preview.cursorBlinkInterval}</label>
-        {sliderView "cursorBlinkInterval" model.preview.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)}
+        <label for="cursorBlinkInterval">Cursor Blink Interval {showMs model.cursorBlinkInterval}</label>
+        {sliderView "cursorBlinkInterval" model.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)}
       </div>
     else
       <div></div>
@@ -253,6 +278,7 @@ viewCursorBlinkInterval model =
 
 
 -- Kanye's lovin' it
+kanye : String
 kanye =
   """McDonalds Man by Kanye West
 
