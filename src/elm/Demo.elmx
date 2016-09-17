@@ -32,6 +32,7 @@ type alias Model =
   , minWait : Time
   , maxWait : Time
   , showCursor : Bool
+  , cursor : String
   , cursorBlinkInterval : Time
   , showAdvanced : Bool
   }
@@ -65,6 +66,7 @@ init seed =
     , minWait = previewSettings.minWait
     , maxWait = previewSettings.maxWait
     , showCursor = previewSettings.showCursor
+    , cursor = previewSettings.cursor
     , cursorBlinkInterval = previewSettings.cursorBlinkInterval
     , showAdvanced = True
     } ! [ Cmd.map PreviewMsg previewCmd, Cmd.map TaglineMsg taglineCmd ]
@@ -80,6 +82,7 @@ type Msg
   | SetMinWait String
   | SetMaxWait String
   | ToggleShowCursor
+  | SetCursor String
   | SetCursorBlinkInterval String
   | ToggleShowAdvanced
 
@@ -109,6 +112,9 @@ update msg model =
     ToggleShowCursor ->
       let showCursor = not model.showCursor
       in update (PreviewMsg <| DrunkLabel.ShowCursor <| showCursor) { model | showCursor = showCursor }
+    SetCursor cursor ->
+      { model | cursor = cursor } ! []
+        :> \m -> update (PreviewMsg (DrunkLabel.SetCursor m.cursor)) m
     SetCursorBlinkInterval str ->
       { model | cursorBlinkInterval = Result.withDefault model.cursorBlinkInterval <| String.toFloat str } ! []
         :> \m -> update (PreviewMsg (DrunkLabel.SetCursorBlinkInterval m.cursorBlinkInterval)) m
@@ -251,9 +257,15 @@ viewCursorBlinkInterval : Model -> Html Msg
 viewCursorBlinkInterval model =
   if model.showCursor
     then
-      <div class="form-group">
-        <label for="cursorBlinkInterval">Cursor Blink Interval {showMs model.cursorBlinkInterval}</label>
-        {sliderView "cursorBlinkInterval" model.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)}
+      <div>
+        <div class="form-group">
+          <label for="cursorBlinkInterval">Cursor Blink Interval {showMs model.cursorBlinkInterval}</label>
+          {sliderView "cursorBlinkInterval" model.cursorBlinkInterval SetCursorBlinkInterval 10 (1 * second)}
+        </div>
+        <div class="form-group">
+          <label for="cursor">Cursor</label>
+          <input type="text" class="form-control" value={model.cursor} {onInput SetCursor} />
+        </div>
       </div>
     else
       <div></div>
